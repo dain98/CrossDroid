@@ -72,7 +72,7 @@
                 <!-- ============ SIGNED-OUT STATE ============ -->
                 <LinearLayout
                     android:id="@+id/signed_out_group"
-                    android:layout_width="420dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:visibility="gone">
@@ -152,7 +152,7 @@
                 <!-- ============ SIGNED-IN STATE ============ -->
                 <LinearLayout
                     android:id="@+id/signed_in_group"
-                    android:layout_width="420dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:gravity="center_horizontal"
