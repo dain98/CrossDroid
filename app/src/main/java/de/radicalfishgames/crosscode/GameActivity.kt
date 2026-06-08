@@ -123,8 +123,11 @@ class GameActivity : AppCompatActivity() {
                 Log.e("CrossCode", "[Steam] quit: extracting save failed", e)
             }
 
-            if (account == null || token == null || !saveFile.exists() || saveFile.length() == 0L) {
-                returnToLauncher() // not logged in, or nothing to push
+            val offlineMode = prefs.getBoolean("playOffline", false)
+            if (offlineMode || account == null || token == null || !saveFile.exists() || saveFile.length() == 0L) {
+                // Offline mode, not signed in, or nothing to push: keep the save local. The next
+                // online PLAY reconciles it via lastSyncedSha (local-changed -> pushed up).
+                returnToLauncher()
                 return@ValueCallback
             }
 

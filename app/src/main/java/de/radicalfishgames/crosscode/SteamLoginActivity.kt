@@ -16,6 +16,7 @@ import android.util.Log
 import android.view.Gravity
 import android.view.KeyEvent
 import android.view.View
+import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -58,6 +59,7 @@ class SteamLoginActivity : AppCompatActivity() {
     private lateinit var signInButton: MaterialButton
     private lateinit var qrButton: MaterialButton
     private lateinit var playButton: MaterialButton
+    private lateinit var offlineToggle: CheckBox
     private lateinit var avatar: ShapeableImageView
 
     @Volatile private var profileRefreshing = false
@@ -84,6 +86,7 @@ class SteamLoginActivity : AppCompatActivity() {
         signInButton = findViewById(R.id.sign_in_button)
         qrButton = findViewById(R.id.qr_button)
         playButton = findViewById(R.id.play_button)
+        offlineToggle = findViewById(R.id.offline_toggle)
         avatar = findViewById(R.id.avatar)
 
         // Keep the pixel-art logo crisp instead of bilinear-smeared when scaled up.
@@ -92,6 +95,10 @@ class SteamLoginActivity : AppCompatActivity() {
         signInButton.setOnClickListener { signIn() }
         qrButton.setOnClickListener { loginWithQr() }
         playButton.setOnClickListener { play() }
+        offlineToggle.setOnCheckedChangeListener { _, checked ->
+            prefs.edit().putBoolean("playOffline", checked).apply()
+            updatePlayLabel()
+        }
         findViewById<MaterialButton>(R.id.sign_out_button).setOnClickListener { signOut() }
 
         renderState()
@@ -107,6 +114,8 @@ class SteamLoginActivity : AppCompatActivity() {
         if (account != null && token != null) {
             signedOutGroup.visibility = View.GONE
             signedInGroup.visibility = View.VISIBLE
+            offlineToggle.isChecked = playOffline
+            updatePlayLabel()
             refreshAccountLine()
             loadAvatar()
             refreshProfileIfNeeded()
@@ -144,6 +153,20 @@ class SteamLoginActivity : AppCompatActivity() {
         val bmp = if (avatarFile.exists()) BitmapFactory.decodeFile(avatarFile.absolutePath) else null
         if (bmp != null) { avatar.setImageBitmap(bmp); avatar.visibility = View.VISIBLE }
         else avatar.visibility = View.GONE
+    }
+
+    // Manual "Play Offline" toggle: when on, PLAY skips the Steam round-trip and launches the local
+    // save instantly. Saves still reconcile via lastSyncedSha the next time you PLAY online.
+    private val playOffline: Boolean get() = prefs.getBoolean("playOffline", false)
+
+    private fun updatePlayLabel() {
+        if (playOffline) {
+            playButton.text = "▶  PLAY OFFLINE"
+            findViewById<TextView>(R.id.play_caption).text = "Plays your local save · no cloud sync"
+        } else {
+            playButton.text = "▶  PLAY"
+            findViewById<TextView>(R.id.play_caption).text = "Pulls your latest save · uploads to Steam Cloud on quit"
+        }
     }
 
     // For an already-signed-in user with no cached avatar, fetch it quietly in the background.
@@ -293,6 +316,13 @@ class SteamLoginActivity : AppCompatActivity() {
         if (account == null || token == null) { renderState(); return }
         if (!gameFilesPresent()) {
             downloadCrossCode(account, token)
+            return
+        }
+        if (playOffline) {
+            // Deliberate offline: skip the cloud round-trip and launch the local save now.
+            // lastSyncedSha reconciles everything the next time you PLAY with the toggle off.
+            setStatus("Playing offline — your progress syncs next time you play online.")
+            launchGame()
             return
         }
 

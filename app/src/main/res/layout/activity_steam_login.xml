@@ -174,6 +174,16 @@
                     android:textSize="12sp"
                     android:gravity="center" />
 
+                <CheckBox
+                    android:id="@+id/offline_toggle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Play offline (skip cloud sync)"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp"
+                    android:buttonTint="@color/play_cyan" />
+
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/sign_out_button"
                     style="@style/Widget.MaterialComponents.Button.TextButton"
