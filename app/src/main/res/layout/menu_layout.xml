@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:alpha="0.5">
+
+    <de.radicalfishgames.crosscode.overlay.CircleDirectionalPad
+        android:id="@+id/menu_directions"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        app:image="@drawable/tmp_button"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.01"
+        app:layout_constraintVertical_bias="0.95" />
+
+    <de.radicalfishgames.crosscode.overlay.CircleButton
+        android:id="@+id/tab_left"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_marginStart="8dp"
+        app:image="@drawable/gamepad_leftbumper"
+        app:layout_constraintBottom_toTopOf="@+id/menu_directions"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <de.radicalfishgames.crosscode.overlay.CircleButton
+        android:id="@+id/tab_right"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_marginEnd="8dp"
+        app:image="@drawable/gamepad_rightbumper"
+        app:layout_constraintBottom_toTopOf="@+id/rightcross_top"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <de.radicalfishgames.crosscode.overlay.CircleButton
+        android:id="@+id/rightcross_left"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        app:image="@drawable/gamepad_x"
+        app:layout_constraintEnd_toStartOf="@+id/rightcross_top"
+        app:layout_constraintTop_toBottomOf="@+id/rightcross_top" />
+
+    <de.radicalfishgames.crosscode.overlay.CircleButton
+        android:id="@+id/help_button"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        app:image="@drawable/gamepad_help"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <de.radicalfishgames.crosscode.overlay.CircleButton
+        android:id="@+id/rightcross_right"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        app:image="@drawable/gamepad_b"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.8" />
+
+    <de.radicalfishgames.crosscode.overlay.CircleButton
+        android:id="@+id/rightcross_top"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        app:image="@drawable/gamepad_y"
+        app:layout_constraintBottom_toTopOf="@+id/rightcross_right"
+        app:layout_constraintEnd_toStartOf="@+id/rightcross_right" />
+
+    <de.radicalfishgames.crosscode.overlay.CircleButton
+        android:id="@+id/rightcross_bottom"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        app:image="@drawable/gamepad_a"
+        app:layout_constraintEnd_toStartOf="@+id/rightcross_right"
+        app:layout_constraintTop_toBottomOf="@+id/rightcross_right" />
+
+    <!-- Since we can't detect gestures that started outside the view,
+            we increase the area the view can detect gestures in by adding lots of padding-->
+    <de.radicalfishgames.crosscode.overlay.SwipeControl
+        android:id="@+id/overlay_toggle"
+        android:alpha="0.4"
+        android:layout_width="150dp"
+        android:layout_height="65dp"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="30dp"
+        app:image="@drawable/overlay_on"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

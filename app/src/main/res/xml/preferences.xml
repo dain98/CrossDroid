@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <SwitchPreference
+        android:defaultValue="true"
+        android:key="switch_layout_automatically"
+        android:summary="@string/switch_layout_automatically_summary"
+        android:title="@string/switch_layout_automatically" />
+
+    <SwitchPreference
+        android:defaultValue="true"
+        android:key="disable_overlay_cutscenes"
+        android:summary="@string/disable_overlay_cutscenes_automatically_summary"
+        android:title="@string/disable_overlay_cutscenes" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="force_virtual"
+        app:summary="@string/force_virtual_summary"
+        app:title="@string/force_virtual_title" />
+
+    <SeekBarPreference
+        android:defaultValue="0"
+        android:key="overlay_transparency"
+        android:max="100"
+        app:showSeekBarValue="true"
+        app:summary="@string/overlay_transparency_summary"
+        app:title="@string/overlay_transparency_title" />
+
+    <SeekBarPreference
+        android:defaultValue="5"
+        android:key="overlay_scale_factor"
+        android:max="10"
+        app:summary="@string/overlay_size_summary"
+        app:title="@string/overlay_size_title" />
+
+    <SwitchPreference
+        android:defaultValue="true"
+        android:key="always_sprint"
+        android:summary="@string/always_sprint_summary"
+        android:title="@string/always_sprint_title" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="disable_swipe_dash"
+        android:summary="@string/disable_swipe_dash_summary"
+        android:title="@string/disable_swipe_dash_title" />
+
+    <SwitchPreference
+        android:defaultValue="true"
+        android:key="vibration_on_rumble"
+        android:summary="@string/vibration_on_rumble_summary"
+        android:title="@string/vibration_on_rumble_title" />
+
+    <EditTextPreference
+        android:key="save_to_import"
+        android:summary="@string/import_save_summary"
+        android:title="@string/import_save_title" />
+
+    <Preference
+        android:key="fileToImport"
+        android:summary="@string/import_file_summary"
+        android:title="@string/import_file_title" />
+
+    <SwitchPreference
+        android:defaultValue="false"
+        android:key="export_save"
+        app:summary="@string/export_save_summary"
+        app:title="@string/export_save_title" />
+
+</PreferenceScreen>

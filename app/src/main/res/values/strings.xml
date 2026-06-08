@@ -1,0 +1,40 @@
+<resources>
+    <string name="app_name">CrossDroid</string>
+    <string name="welcome">Welcome to CrossDroid!</string>
+    <string name="game_files_explanation">For ethical, legal, and technical reasons, this app does not come bundled with the CrossCode game files. But there is a way you can add them yourself!\nThis in-app guide will show you how.\n\nYou\'ll need a PC or Laptop with internet and a cable to connect your phone.</string>
+    <string name="permission_step_title">Step One: Grant file permissions</string>
+    <string name="permission_explanation">The game files are going to be placed in your phones storage. In order to execute them later, this app needs your permission to access this storage.\n\nClick on the button and confirm the permission to proceed.</string>
+    <string name="ask_permission">Grant Permission</string>
+    <string name="continue_guide">Continue</string>
+    <string name="install_ccloader_title">Step Two: Install CCLoader and the cc-font-fix mod</string>
+    <string name="install_ccloader_explanation">Next, we have install the modloader named CCLoader.\nFollow the instructions on:\nhttps://wiki.c2dl.info/CCLoader\n\nThen, install the mod to fix an issue with the game font:\nhttps://github.com/krypciak/cc-font-fix</string>
+    <string name="copy_instance_title">Step Three: Copy the game directory onto your phone</string>
+    <string name="copy_instance_explanation">Copy the "CrossCode" main directory onto your phone to a folder:\nAndroid/data/de.radicalfishgames.crosscode/files\n\nMake sure the following path exists:\nAndroid/data/de.radicalfishgames.crosscode/files/CrossCode/assets</string>
+
+    <string name="finish_guide">Finish</string>
+    <string name="launch_game">Launch CrossCode</string>
+    <string name="preferences">Preferences</string>
+    <string name="switch_layout_automatically">Auto-Switch overlays</string>
+    <string name="switch_layout_automatically_summary">Switch between combat/menu overlay automatically</string>
+    <string name="disable_overlay_cutscenes">Disable overlay in cutscenes</string>
+    <string name="disable_overlay_cutscenes_automatically_summary">Disable overlay automatically during cutscenes, conversations and Direct Links</string>
+    <string name="overlay_transparency_title">Overlay Transparency</string>
+    <string name="overlay_transparency_summary">Set the transparency of the overlay from 0 (fully visible) to 100 (fully invisible)</string>
+    <string name="import_save_title">Import Save String</string>
+    <string name="import_save_summary">Paste a Save String here, and it will be imported to the game when it next starts (one at a time only)</string>
+    <string name="import_file_title">Import Save File</string>
+    <string name="import_file_summary">Select a save file and it will be imported to the game when it next starts (one at a time only)</string>
+    <string name="export_save_title">Show Exported Save String</string>
+    <string name="export_save_summary">Display a dialog with the Save String of the latest Save on game start</string>
+    <string name="vibration_on_rumble_title">Enable Haptic Feedback</string>
+    <string name="vibration_on_rumble_summary">Vibrate when the screen shakes in-game</string>
+    <string name="about_app">About</string>
+    <string name="overlay_size_title">Overlay Size</string>
+    <string name="overlay_size_summary">Scale the overlay size</string>
+    <string name="always_sprint_title">Always Sprint</string>
+    <string name="always_sprint_summary">Enable this to always run as fast as possible, no matter where you touch the movement pad.</string>
+    <string name="disable_swipe_dash_title">Dash only on tap</string>
+    <string name="disable_swipe_dash_summary">Only dash when the dash area is tapped (not swiped into) to avoid dashing by accident</string>
+    <string name="force_virtual_summary">Always use the virtual controller, even when a physical controller is connected.</string>
+    <string name="force_virtual_title">Force Virtual Controller</string>
+</resources>

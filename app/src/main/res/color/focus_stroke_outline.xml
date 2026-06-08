@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Outlined button: subtle border normally, bright white when controller-focused. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_focused="true" android:color="#FFFFFFFF" />
+    <item android:color="@color/text_secondary" />
+</selector>

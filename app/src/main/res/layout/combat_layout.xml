@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:background="@drawable/test_screenshot">
+
+    <de.radicalfishgames.crosscode.overlay.CircleDirectionalPad
+        android:id="@+id/aim_pad"
+        android:layout_width="180dp"
+        android:layout_height="180dp"
+        app:image="@drawable/attack_shoot"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.97"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.95" />
+
+    <de.radicalfishgames.crosscode.overlay.CircleButton
+        android:id="@+id/quickmenu_button"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        app:image="@drawable/quick_menu"
+        app:layout_constraintBottom_toTopOf="@+id/aim_pad"
+        app:layout_constraintEnd_toEndOf="@+id/aim_pad"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="@+id/aim_pad" />
+
+    <de.radicalfishgames.crosscode.overlay.CircleButton
+        android:id="@+id/dash_button"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        app:image="@drawable/dash_guard"
+        app:layout_constraintBottom_toBottomOf="@+id/aim_pad"
+        app:layout_constraintEnd_toStartOf="@+id/aim_pad"
+        app:layout_constraintTop_toTopOf="@+id/aim_pad"
+        app:layout_constraintVertical_bias="1.0" />
+
+    <de.radicalfishgames.crosscode.overlay.CircleButton
+        android:id="@+id/shield_button"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        app:image="@drawable/dash_guard"
+        app:layout_constraintBottom_toBottomOf="@+id/movement_pad"
+        app:layout_constraintStart_toEndOf="@+id/movement_pad"
+        app:layout_constraintTop_toTopOf="@+id/movement_pad"
+        app:layout_constraintVertical_bias="1.0" />
+
+    <de.radicalfishgames.crosscode.overlay.SwipeControl
+        android:id="@+id/elemental_button"
+        android:layout_width="90dp"
+        android:layout_height="90dp"
+        android:paddingStart="5dp"
+        android:paddingTop="30dp"
+        android:paddingEnd="30dp"
+        android:paddingBottom="5dp"
+        app:image="@drawable/element_neutral"
+        app:layout_constraintBottom_toTopOf="@+id/movement_pad"
+        app:layout_constraintEnd_toEndOf="@+id/movement_pad"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@+id/movement_pad" />
+
+    <de.radicalfishgames.crosscode.overlay.CircleDirectionalPad
+        android:id="@+id/movement_pad"
+        android:layout_width="220dp"
+        android:layout_height="220dp"
+        app:image="@drawable/move_analog"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.03"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.95" />
+
+    <de.radicalfishgames.crosscode.overlay.CircleButton
+        android:id="@+id/menu_button"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        app:image="@drawable/esc_char_menu"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.97"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.050000012" />
+
+    <!-- Since we can't detect gestures that started outside the view,
+            we increase the area the view can detect gestures in by adding lots of padding-->
+    <de.radicalfishgames.crosscode.overlay.SwipeControl
+        android:id="@+id/overlay_toggle"
+        android:layout_width="150dp"
+        android:layout_height="65dp"
+        android:alpha="0.4"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="30dp"
+        app:image="@drawable/overlay_on"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0" />
+    
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    android:hardwareAccelerated="true">
+
+    <!-- Steam login + cloud-save sync need network access (the game itself runs from local files). -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.BLUETOOTH"/>
+
+    <supports-screens
+        android:resizeable="false"
+        android:anyDensity="true"
+        android:largeScreens="true"
+        android:normalScreens="true"
+        android:smallScreens="true"
+        android:xlargeScreens="true" />
+
+    <application
+        android:label="@string/app_name"
+        android:icon="@drawable/lea_sprite"
+        android:theme="@style/AppTheme"
+        android:isGame="true"
+        android:hardwareAccelerated="true"
+        android:largeHeap="true"
+        android:allowBackup="true"
+        android:hasFragileUserData="true">
+
+        <!-- Steam launcher is the home screen: sign in, then PLAY (pull cloud save -> launch). -->
+        <activity android:name=".SteamLoginActivity"
+            android:exported="true"
+            android:screenOrientation="sensorLandscape"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Original file-setup launcher, kept for the install guide (no longer the entry point). -->
+        <activity android:name=".LaunchActivity"
+            android:exported="false" />
+
+        <activity android:name=".preferences.PreferencesActivity" />
+
+
+        <activity android:name=".GameActivity"
+            android:screenOrientation="sensorLandscape"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode">
+        </activity>
+    </application>
+
+</manifest>

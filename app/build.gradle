@@ -1,0 +1,58 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    namespace 'de.radicalfishgames.crosscode'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "de.radicalfishgames.crosscode"
+        minSdk 21
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+        multiDexEnabled true
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        coreLibraryDesugaringEnabled true
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+
+    buildFeatures {
+        viewBinding true
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'androidx.preference:preference-ktx:1.2.1'
+    implementation 'androidx.core:core-ktx:1.13.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'org.jetbrains.kotlin:kotlin-reflect:2.0.21'
+    implementation 'com.google.android.material:material:1.12.0'
+
+    // Steam client (Java port of SteamKit2): login + depot download + cloud-save sync.
+    implementation 'in.dragonbra:javasteam:1.6.0'
+    // JavaSteam's CryptoHelper needs the full BouncyCastle JCE provider; Android only ships a
+    // stripped com.android.org.bouncycastle, so bundle the real one explicitly.
+    implementation 'org.bouncycastle:bcprov-jdk18on:1.78.1'
+    // QR-code rendering for the "Sign in with QR" flow.
+    implementation 'com.google.zxing:core:3.5.3'
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
+}

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#40C4FF</color>
+    <color name="colorPrimaryDark">#448AFF</color>
+    <color name="colorAccent">#40C4FF</color>
+
+    <!-- Dark game-launcher palette (SteamLoginActivity) -->
+    <color name="launcher_bg">#0D1117</color>
+    <color name="launcher_bg_top">#16314D</color>
+    <color name="launcher_bg_bottom">#090C10</color>
+    <color name="launcher_surface">#161B22</color>
+    <color name="text_primary">#E6EDF3</color>
+    <color name="text_secondary">#8B949E</color>
+    <color name="play_cyan">#40C4FF</color>
+    <color name="play_text">#06121A</color>
+    <color name="online_green">#3FB950</color>
+</resources>
