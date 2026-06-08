@@ -14,4 +14,7 @@
     <color name="play_cyan">#40C4FF</color>
     <color name="play_text">#06121A</color>
     <color name="online_green">#3FB950</color>
+
+    <!-- Adaptive launcher-icon background (only shows behind the full-bleed box-art foreground on odd masks) -->
+    <color name="ic_launcher_background">#16314D</color>
 </resources>
