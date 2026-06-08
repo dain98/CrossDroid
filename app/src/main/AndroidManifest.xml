@@ -25,6 +25,7 @@
         android:isGame="true"
         android:hardwareAccelerated="true"
         android:largeHeap="true"
+        android:usesCleartextTraffic="true"
         android:allowBackup="true"
         android:hasFragileUserData="true">
 

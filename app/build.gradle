@@ -44,7 +44,7 @@ dependencies {
     implementation 'androidx.preference:preference-ktx:1.2.1'
     implementation 'androidx.core:core-ktx:1.13.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'org.jetbrains.kotlin:kotlin-reflect:2.0.21'
+    implementation 'org.jetbrains.kotlin:kotlin-reflect:2.2.20'
     implementation 'com.google.android.material:material:1.12.0'
 
     // Steam client (Java port of SteamKit2): login + depot download + cloud-save sync.
@@ -54,5 +54,9 @@ dependencies {
     implementation 'org.bouncycastle:bcprov-jdk18on:1.78.1'
     // QR-code rendering for the "Sign in with QR" flow.
     implementation 'com.google.zxing:core:3.5.3'
+    // Zstandard decoder for Steam's newer "VSZ" (zstd) chunks (JavaSteam 1.6.0 can't decode them).
+    // Square's KMP zstd officially supports Android (API 21+) with bundled native libs.
+    implementation 'com.squareup.zstd:zstd-kmp-okio:0.4.0'
+    implementation 'com.squareup.okio:okio:3.16.0'
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
 }

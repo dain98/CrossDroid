@@ -204,6 +204,16 @@
                 android:gravity="center"
                 android:textColor="@color/text_secondary"
                 android:textSize="13sp" />
+
+            <ProgressBar
+                android:id="@+id/download_bar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:max="100"
+                android:progressTint="@color/play_cyan"
+                android:visibility="gone" />
         </LinearLayout>
     </ScrollView>
 

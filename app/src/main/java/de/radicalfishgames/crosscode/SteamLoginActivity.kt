@@ -32,6 +32,7 @@ import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
 import de.radicalfishgames.crosscode.steam.SteamAuth
 import de.radicalfishgames.crosscode.steam.SteamCloudSync
+import de.radicalfishgames.crosscode.steam.SteamDepotDownloader
 import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
@@ -53,6 +54,7 @@ class SteamLoginActivity : AppCompatActivity() {
     private lateinit var accountLine: TextView
     private lateinit var status: TextView
     private lateinit var progress: ProgressBar
+    private lateinit var downloadBar: ProgressBar
     private lateinit var signInButton: MaterialButton
     private lateinit var qrButton: MaterialButton
     private lateinit var playButton: MaterialButton
@@ -78,6 +80,7 @@ class SteamLoginActivity : AppCompatActivity() {
         accountLine = findViewById(R.id.account_line)
         status = findViewById(R.id.status)
         progress = findViewById(R.id.progress)
+        downloadBar = findViewById(R.id.download_bar)
         signInButton = findViewById(R.id.sign_in_button)
         qrButton = findViewById(R.id.qr_button)
         playButton = findViewById(R.id.play_button)
@@ -285,8 +288,7 @@ class SteamLoginActivity : AppCompatActivity() {
         val token = prefs.getString("token", null)
         if (account == null || token == null) { renderState(); return }
         if (!gameFilesPresent()) {
-            setStatus("CrossCode game files not found. Copy the CrossCode folder into " +
-                "Android/data/$packageName/files first.")
+            downloadCrossCode(account, token)
             return
         }
 
@@ -330,6 +332,76 @@ class SteamLoginActivity : AppCompatActivity() {
         }.apply { isDaemon = true; name = "SteamPlay"; start() }
     }
 
+    // First run: download CrossCode's web game from the Steam CDN, extract the bundled mod loader,
+    // then launch. Resumable + auto-retrying inside the downloader.
+    private fun downloadCrossCode(account: String, token: String) {
+        setBusy(true, "Connecting to Steam to download CrossCode…")
+        runOnUiThread { downloadBar.progress = 0; downloadBar.visibility = View.VISIBLE }
+        Thread {
+            val ccDir = File(getExternalFilesDir(null), "CrossCode")
+            val lastPct = java.util.concurrent.atomic.AtomicInteger(-1)
+            var ok = false
+            try {
+                val dl = SteamDepotDownloader(account, token)
+                try {
+                    if (dl.connect()) {
+                        ok = dl.download(
+                            ccDir,
+                            onProgress = { p ->
+                                if (p.percent != lastPct.getAndSet(p.percent)) runOnUiThread {
+                                    downloadBar.progress = p.percent
+                                    status.text = "Downloading CrossCode… ${p.percent}%  (${p.completedFiles}/${p.totalFiles})"
+                                }
+                            },
+                            log = { Log.i("CrossCode", "[Depot] $it") }
+                        )
+                    } else setStatus("Couldn't reach Steam to download CrossCode.")
+                } finally {
+                    dl.disconnect()
+                }
+            } catch (t: Throwable) {
+                Log.e("CrossCode", "[Depot] download failed", t)
+                setStatus("Download failed: ${t.message ?: t.javaClass.simpleName}")
+            }
+
+            if (ok) {
+                setStatus("Installing mod loader…")
+                ok = try {
+                    provisionMods(ccDir); true
+                } catch (t: Throwable) {
+                    Log.e("CrossCode", "[Depot] mod provision failed", t)
+                    setStatus("Mod setup failed: ${t.message ?: t.javaClass.simpleName}"); false
+                }
+            }
+
+            runOnUiThread {
+                downloadBar.visibility = View.GONE
+                setBusy(false)
+                if (ok) { setStatus("CrossCode installed!"); play() }
+            }
+        }.apply { isDaemon = true; name = "SteamDownload"; start() }
+    }
+
+    // Extract the bundled mod loader + cc-font-fix (assets/mods.zip) into the game dir.
+    private fun provisionMods(ccDir: File) {
+        val root = ccDir.canonicalPath
+        assets.open("mods.zip").use { ins ->
+            java.util.zip.ZipInputStream(ins).use { zis ->
+                var entry = zis.nextEntry
+                while (entry != null) {
+                    val out = File(ccDir, entry.name)
+                    if (out.canonicalPath.startsWith(root)) {          // zip-slip guard
+                        if (entry.isDirectory) out.mkdirs()
+                        else { out.parentFile?.mkdirs(); out.outputStream().use { zis.copyTo(it) } }
+                    }
+                    zis.closeEntry()
+                    entry = zis.nextEntry
+                }
+            }
+        }
+        Log.i("CrossCode", "[Depot] mod loader provisioned")
+    }
+
     private fun signOut() {
         prefs.edit().remove("account").remove("token").remove("guard")
             .remove("persona").remove("avatarHash").apply()
@@ -348,9 +420,16 @@ class SteamLoginActivity : AppCompatActivity() {
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK))
     }
 
+    // "Installed" = game assets AND a mod-loader entry. A partial depot download has assets/ but no
+    // ccloader (mods are extracted only after the full download), so this won't mistake it for ready.
     private fun gameFilesPresent(): Boolean {
         val dir = getExternalFilesDir(null) ?: return false
-        return File(dir, "CrossCode/assets").exists()
+        val cc = File(dir, "CrossCode")
+        val hasAssets = File(cc, "assets").exists()
+        val hasLoader = File(cc, "ccloader/main.html").exists() ||
+            File(cc, "ccloader/index.html").exists() ||
+            File(cc, "ccloader3/main.html").exists()
+        return hasAssets && hasLoader
     }
 
     // Connect with a refresh token: fetch the profile (name + avatar) and download the cloud cc.save.

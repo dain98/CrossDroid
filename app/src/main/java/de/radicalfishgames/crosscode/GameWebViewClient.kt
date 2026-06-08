@@ -153,6 +153,6 @@ object FallbackMimeTypeMap {
     }
 
     fun getMimeTypeFromExtension(extension: String): String? {
-        return if(extension.isNotEmpty()) extensionsToMimeTypesMap[extension.toLowerCase(Locale.ROOT)] else null
+        return if(extension.isNotEmpty()) extensionsToMimeTypesMap[extension.lowercase(Locale.ROOT)] else null
     }
 }
