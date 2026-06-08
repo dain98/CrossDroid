@@ -138,12 +138,17 @@ class GameActivity : AppCompatActivity() {
                 try {
                     val sync = SteamCloudSync(account, token)
                     try {
-                        if (sync.connect()) {
-                            val files = sync.listFiles()
-                            val name = files.firstOrNull { it.endsWith("cc.save") && !it.contains("PERCENT") }
-                                ?: "%WinAppDataLocal%cc.save"
-                            if (!sync.push(name, saveFile)) {
-                                msg = "Couldn't upload to Steam Cloud — saved locally, will retry next time."
+                        if (sync.connect() == SteamCloudSync.ConnectResult.OK) {
+                            val name = sync.findSave()?.name ?: "%WinAppDataLocal%cc.save"
+                            msg = when (sync.push(name, saveFile)) {
+                                SteamCloudSync.PushResult.UPLOADED, SteamCloudSync.PushResult.UNCHANGED -> {
+                                    prefs.edit().putString("lastSyncedSha", SteamCloudSync.sha1Hex(saveFile)).apply()
+                                    "Progress saved to Steam Cloud."
+                                }
+                                SteamCloudSync.PushResult.REFUSED_SMALLER ->
+                                    "Your cloud save looks more complete — saved this run locally and left the cloud untouched."
+                                SteamCloudSync.PushResult.FAILED ->
+                                    "Couldn't upload to Steam Cloud — saved locally, will retry next time."
                             }
                         } else {
                             msg = "Couldn't reach Steam Cloud — saved locally, will retry next time."

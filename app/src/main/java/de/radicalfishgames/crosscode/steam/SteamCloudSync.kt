@@ -35,7 +35,13 @@ class SteamCloudSync(private val accountName: String, private val refreshToken: 
     @Volatile private var pumping = false
     private var pumpThread: Thread? = null
 
-    fun connect(timeoutSec: Long = 20): Boolean {
+    // OK = logged on. AUTH_FAILED = Steam answered but rejected the token (re-login needed).
+    // NETWORK_FAILED = couldn't reach Steam at all (offline). Callers MUST treat NETWORK_FAILED as
+    // "play the local save, keep the saved login" — NOT as an expired login (that would wipe the
+    // token and refuse to launch when you're simply offline).
+    enum class ConnectResult { OK, AUTH_FAILED, NETWORK_FAILED }
+
+    fun connect(timeoutSec: Long = 20): ConnectResult {
         val loggedOn = CountDownLatch(1)
         var result: EResult? = null
 
@@ -52,13 +58,18 @@ class SteamCloudSync(private val accountName: String, private val refreshToken: 
         }
 
         startPump()
-        client.connect()
+        try {
+            client.connect()
+        } catch (t: Throwable) {
+            Log.e("CrossCode", "[Steam] connect() threw (offline?)", t)
+            return ConnectResult.NETWORK_FAILED
+        }
         if (!loggedOn.await(timeoutSec, TimeUnit.SECONDS)) {
-            Log.e("CrossCode", "[Steam] logon timed out")
-            return false
+            Log.e("CrossCode", "[Steam] couldn't reach Steam (offline?)")
+            return ConnectResult.NETWORK_FAILED
         }
         Log.i("CrossCode", "[Steam] logon result: $result")
-        return result == EResult.OK
+        return if (result == EResult.OK) ConnectResult.OK else ConnectResult.AUTH_FAILED
     }
 
     data class Profile(val personaName: String?, val avatarHashHex: String?)
@@ -99,6 +110,19 @@ class SteamCloudSync(private val accountName: String, private val refreshToken: 
         return file.timestamp.time
     }
 
+    data class CloudFile(val name: String, val shaHex: String, val size: Int, val timestampMillis: Long)
+
+    // Locate the cloud save (canonical cc.save; skip Steam's escaped %...PERCENT...% variants) and
+    // return its identity (SHA-1 + size + mtime), or null if there's no cloud save yet.
+    fun findSave(): CloudFile? {
+        val files = cloud.getAppFileListChange(APP_ID).get().files
+        val f = files.firstOrNull { it.filename == "cc.save" }
+            ?: files.firstOrNull { it.filename.endsWith("cc.save") && !it.filename.contains("PERCENT") }
+            ?: return null
+        val shaHex = f.shaFile?.joinToString("") { "%02x".format(it) } ?: ""
+        return CloudFile(f.filename, shaHex, f.rawFileSize, f.timestamp.time)
+    }
+
     // Download a cloud file to dest. Returns true on success.
     fun pull(filename: String, dest: File): Boolean {
         val info = cloud.clientFileDownload(APP_ID, filename).get()
@@ -123,26 +147,44 @@ class SteamCloudSync(private val accountName: String, private val refreshToken: 
         }
 
         dest.parentFile?.mkdirs()
-        dest.writeBytes(bytes)
+        backupIfPresent(dest)          // keep the prior local save as .bak before overwriting
+        writeAtomically(dest, bytes)
         Log.i("CrossCode", "[Steam] pulled $filename (${bytes.size} bytes) -> ${dest.absolutePath}")
         return true
     }
 
-    // Upload a local file to Steam Cloud under `filename`. Returns true on success.
-    // If the cloud already holds byte-identical content, this is a no-op success: Steam rejects a
-    // commit when nothing changed (commitFileUpload returns false), so we detect that up front via
-    // the cloud file's SHA-1 and report "already up to date" instead of a spurious failure.
-    fun push(filename: String, src: java.io.File): Boolean {
+    // Upload a local file to Steam Cloud. Returns:
+    //   UNCHANGED       - cloud already byte-identical (Steam rejects a no-op commit), so skip.
+    //   REFUSED_SMALLER - the cloud holds a substantial save and this one is < half its size:
+    //                     almost certainly a fresh/partial save written because the cloud slots
+    //                     never loaded. We refuse rather than clobber a good save; caller surfaces it.
+    //   UPLOADED        - uploaded and committed.
+    //   FAILED          - empty source, or an upload/commit error.
+    enum class PushResult { UPLOADED, UNCHANGED, REFUSED_SMALLER, FAILED }
+
+    fun push(filename: String, src: java.io.File): PushResult {
         val bytes = src.readBytes()
+        if (bytes.isEmpty()) {
+            Log.w("CrossCode", "[Steam] refusing to push an empty $filename")
+            return PushResult.FAILED
+        }
         val sha = MessageDigest.getInstance("SHA-1").digest(bytes)
         val size = bytes.size
 
-        val cloudSha = runCatching {
-            cloud.getAppFileListChange(APP_ID).get().files.firstOrNull { it.filename == filename }?.shaFile
+        val cloudFile = runCatching {
+            cloud.getAppFileListChange(APP_ID).get().files.firstOrNull { it.filename == filename }
         }.getOrNull()
-        if (cloudSha != null && cloudSha.contentEquals(sha)) {
-            Log.i("CrossCode", "[Steam] push $filename: already up to date ($size bytes, sha match)")
-            return true
+        if (cloudFile != null) {
+            val cloudSha = cloudFile.shaFile
+            if (cloudSha != null && cloudSha.contentEquals(sha)) {
+                Log.i("CrossCode", "[Steam] push $filename: already up to date ($size bytes, sha match)")
+                return PushResult.UNCHANGED
+            }
+            val cloudSize = cloudFile.rawFileSize
+            if (cloudSize >= 4096 && size < cloudSize / 2) {
+                Log.w("CrossCode", "[Steam] refusing to overwrite $cloudSize-byte cloud save with $size-byte save")
+                return PushResult.REFUSED_SMALLER
+            }
         }
 
         val info = cloud.beginFileUpload(
@@ -187,7 +229,7 @@ class SteamCloudSync(private val accountName: String, private val refreshToken: 
         // Commit even on failure (transferSucceeded=false) so Steam releases the upload slot.
         val committed = cloud.commitFileUpload(uploadedOk, APP_ID, sha, filename).get()
         Log.i("CrossCode", "[Steam] push $filename: $size bytes, uploadedOk=$uploadedOk committed=$committed")
-        return uploadedOk && committed
+        return if (uploadedOk && committed) PushResult.UPLOADED else PushResult.FAILED
     }
 
     fun disconnect() {
@@ -206,6 +248,24 @@ class SteamCloudSync(private val accountName: String, private val refreshToken: 
         }
     }
 
+    // Keep the current file as <name>.bak before it gets overwritten — insurance against any
+    // sync mistake; the previous save is always one copy away.
+    private fun backupIfPresent(f: File) {
+        if (f.exists() && f.length() > 0) runCatching {
+            f.copyTo(File(f.parentFile, f.name + ".bak"), overwrite = true)
+        }
+    }
+
+    // Write via a temp file + rename so a crash mid-write can never leave a half-written save.
+    private fun writeAtomically(dest: File, bytes: ByteArray) {
+        val tmp = File(dest.parentFile, dest.name + ".tmp")
+        tmp.writeBytes(bytes)
+        if (!tmp.renameTo(dest)) {
+            dest.writeBytes(bytes)
+            tmp.delete()
+        }
+    }
+
     private fun startPump() {
         pumping = true
         pumpThread = Thread {
@@ -221,5 +281,12 @@ class SteamCloudSync(private val accountName: String, private val refreshToken: 
 
     companion object {
         const val APP_ID = 368340  // CrossCode
+
+        // SHA-1 (hex) of a file's bytes, or null if it's missing/empty. Lets the launcher tell
+        // whether the local save matches the cloud and/or the last-synced baseline.
+        fun sha1Hex(f: File): String? =
+            if (f.exists() && f.length() > 0)
+                MessageDigest.getInstance("SHA-1").digest(f.readBytes()).joinToString("") { "%02x".format(it) }
+            else null
     }
 }

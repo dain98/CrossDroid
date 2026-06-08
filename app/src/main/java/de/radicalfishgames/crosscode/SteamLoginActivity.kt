@@ -156,7 +156,7 @@ class SteamLoginActivity : AppCompatActivity() {
             try {
                 val sync = SteamCloudSync(account, token)
                 try {
-                    if (sync.connect()) {
+                    if (sync.connect() == SteamCloudSync.ConnectResult.OK) {
                         sync.fetchProfile()?.let { p ->
                             prefs.edit().putString("persona", p.personaName)
                                 .putString("avatarHash", p.avatarHashHex).apply()
@@ -281,8 +281,12 @@ class SteamLoginActivity : AppCompatActivity() {
         return bmp
     }
 
-    // Pull the latest cloud save, then launch. Falls back gracefully if the cloud is unreachable,
-    // and bounces back to sign-in if the saved login has expired.
+    // Sync the save, then launch. Version-aware and non-destructive:
+    //   • offline (can't reach Steam) -> play the LOCAL save, keep the saved login
+    //   • only the cloud changed       -> pull it (prior local kept as .bak)
+    //   • only this device changed      -> push it up, keep playing local
+    //   • both changed since last sync  -> ASK which to use (the other is backed up)
+    // Only an actual auth rejection clears the token.
     private fun play() {
         val account = prefs.getString("account", null)
         val token = prefs.getString("token", null)
@@ -292,44 +296,141 @@ class SteamLoginActivity : AppCompatActivity() {
             return
         }
 
-        setBusy(true, "Syncing your latest save…")
+        setBusy(true, "Syncing your save…")
         Thread {
+            val dest = File(getExternalFilesDir(null), "cloudsave/cc.save")
+            val localSha = SteamCloudSync.sha1Hex(dest)
             var launch = false
             var expired = false
-            var msg: String
-            val dest = File(getExternalFilesDir(null), "cloudsave/cc.save")
+            var conflict: ConflictInfo? = null
+            var msg = ""
+            val sync = SteamCloudSync(account, token)
             try {
-                val sync = SteamCloudSync(account, token)
-                try {
-                    if (sync.connect()) {
-                        val files = sync.listFiles()
-                        val name = files.firstOrNull { it == "cc.save" }
-                            ?: files.firstOrNull { it.endsWith("cc.save") && !it.contains("PERCENT") }
-                        msg = if (name != null && sync.pull(name, dest)) "Save synced — launching…"
-                              else "No cloud save yet — starting a new game…"
-                        launch = true
-                    } else {
-                        expired = true
-                        msg = "Your Steam login expired. Please sign in again."
+                when (sync.connect()) {
+                    SteamCloudSync.ConnectResult.NETWORK_FAILED -> {
+                        if (localSha != null) { msg = "Offline — playing your local save."; launch = true }
+                        else msg = "Can't reach Steam and there's no save on this device yet. Connect to the internet and try again."
                     }
-                } finally {
-                    sync.disconnect()
+                    SteamCloudSync.ConnectResult.AUTH_FAILED -> {
+                        expired = true; msg = "Your Steam login expired. Please sign in again."
+                    }
+                    SteamCloudSync.ConnectResult.OK -> {
+                        val cloud = sync.findSave()
+                        when {
+                            cloud == null -> {
+                                msg = if (localSha != null) "No cloud save yet — playing your local save."
+                                      else "No cloud save yet — starting fresh."
+                                launch = true
+                            }
+                            localSha == cloud.shaHex -> {                       // already identical
+                                lastSyncedSha = localSha; msg = "Save is up to date — launching…"; launch = true
+                            }
+                            localSha == null -> {                               // nothing local -> take cloud
+                                if (sync.pull(cloud.name, dest)) {
+                                    lastSyncedSha = SteamCloudSync.sha1Hex(dest); msg = "Cloud save downloaded — launching…"; launch = true
+                                } else msg = "Couldn't download your cloud save. Try again."
+                            }
+                            else -> {
+                                val base = lastSyncedSha
+                                val localChanged = localSha != base
+                                val cloudChanged = cloud.shaHex != base
+                                when {
+                                    !localChanged && cloudChanged -> {          // cloud moved on -> pull
+                                        if (sync.pull(cloud.name, dest)) {
+                                            lastSyncedSha = SteamCloudSync.sha1Hex(dest); msg = "Updated from Steam Cloud — launching…"; launch = true
+                                        } else msg = "Couldn't download your cloud save. Try again."
+                                    }
+                                    localChanged && !cloudChanged -> {          // local moved on (e.g. offline progress) -> push
+                                        msg = when (sync.push(cloud.name, dest)) {
+                                            SteamCloudSync.PushResult.UPLOADED, SteamCloudSync.PushResult.UNCHANGED -> {
+                                                lastSyncedSha = localSha; "Synced your progress to Steam Cloud — launching…"
+                                            }
+                                            SteamCloudSync.PushResult.REFUSED_SMALLER -> "Kept your cloud save (it looks more complete) — playing your local save."
+                                            SteamCloudSync.PushResult.FAILED -> "Couldn't upload right now — playing local, will retry on quit."
+                                        }
+                                        launch = true
+                                    }
+                                    else -> {                                   // both changed (or no baseline) -> ask
+                                        conflict = ConflictInfo(account, token, cloud.name, cloud.timestampMillis, dest.lastModified())
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             } catch (t: Throwable) {
                 Log.e("CrossCode", "[Steam] play-sync failed", t)
-                if (dest.exists() && dest.length() > 0) {
-                    msg = "Couldn't reach Steam Cloud — playing with your local save."
-                    launch = true
-                } else {
-                    msg = "Couldn't reach Steam Cloud: ${t.message ?: t.javaClass.simpleName}"
-                }
+                if (localSha != null) { msg = "Couldn't sync — playing your local save."; launch = true }
+                else msg = "Couldn't sync: ${t.message ?: t.javaClass.simpleName}"
+            } finally {
+                sync.disconnect()
             }
             runOnUiThread {
+                if (conflict != null) { setBusy(false); showConflictDialog(conflict!!); return@runOnUiThread }
                 setBusy(false, msg)
                 if (expired) { prefs.edit().remove("token").apply(); renderState() }
                 if (launch) launchGame()
             }
         }.apply { isDaemon = true; name = "SteamPlay"; start() }
+    }
+
+    // SHA-1 of the save the cloud and this device last agreed on — lets us tell who changed since.
+    private var lastSyncedSha: String?
+        get() = prefs.getString("lastSyncedSha", null)
+        set(v) { prefs.edit().putString("lastSyncedSha", v).apply() }
+
+    private data class ConflictInfo(val account: String, val token: String, val cloudName: String,
+                                    val cloudTs: Long, val localTs: Long)
+
+    // Both the cloud save and this device's save changed since they last matched. Never auto-pick —
+    // ask, and keep a backup of whichever isn't chosen so nothing is lost.
+    private fun showConflictDialog(c: ConflictInfo) {
+        val newer = if (c.cloudTs >= c.localTs) "the cloud save looks newer" else "this device's save looks newer"
+        AlertDialog.Builder(this)
+            .setTitle("Which save do you want?")
+            .setMessage("Your save here and your Steam Cloud save have both changed since they last matched " +
+                "($newer). Pick one to play — the other is backed up, not deleted.")
+            .setCancelable(false)
+            .setPositiveButton("This device's save") { _, _ -> resolveConflict(c, useLocal = true) }
+            .setNegativeButton("Cloud save") { _, _ -> resolveConflict(c, useLocal = false) }
+            .show()
+    }
+
+    private fun resolveConflict(c: ConflictInfo, useLocal: Boolean) {
+        setBusy(true, if (useLocal) "Uploading your save…" else "Downloading your cloud save…")
+        Thread {
+            val dest = File(getExternalFilesDir(null), "cloudsave/cc.save")
+            var msg: String; var launch = false
+            val sync = SteamCloudSync(c.account, c.token)
+            try {
+                if (sync.connect() == SteamCloudSync.ConnectResult.OK) {
+                    if (useLocal) {
+                        // stash the cloud save aside, then push the local one up
+                        runCatching { sync.pull(c.cloudName, File(dest.parentFile, "cc.save.cloud.bak")) }
+                        msg = when (sync.push(c.cloudName, dest)) {
+                            SteamCloudSync.PushResult.UPLOADED, SteamCloudSync.PushResult.UNCHANGED -> {
+                                lastSyncedSha = SteamCloudSync.sha1Hex(dest); "Using this device's save (cloud backed up)."
+                            }
+                            SteamCloudSync.PushResult.REFUSED_SMALLER -> "This device's save is much smaller — kept the cloud save to be safe. Playing local."
+                            SteamCloudSync.PushResult.FAILED -> "Upload failed — playing local, will retry on quit."
+                        }
+                        launch = true
+                    } else {
+                        if (sync.pull(c.cloudName, dest)) {     // pull() keeps the local save as .bak first
+                            lastSyncedSha = SteamCloudSync.sha1Hex(dest); msg = "Using your cloud save (local backed up)."; launch = true
+                        } else msg = "Couldn't download the cloud save. Try again."
+                    }
+                } else {
+                    msg = "Couldn't reach Steam — playing your local save."
+                    launch = dest.exists() && dest.length() > 0
+                }
+            } catch (t: Throwable) {
+                Log.e("CrossCode", "[Steam] conflict resolve failed", t)
+                msg = "Sync error — playing your local save."
+                launch = dest.exists() && dest.length() > 0
+            } finally { sync.disconnect() }
+            runOnUiThread { setBusy(false, msg); if (launch) launchGame() }
+        }.apply { isDaemon = true; name = "SteamConflict"; start() }
     }
 
     // First run: download CrossCode's web game from the Steam CDN, extract the bundled mod loader,
@@ -436,7 +537,13 @@ class SteamLoginActivity : AppCompatActivity() {
     private fun pullCloudSave(account: String, token: String): String {
         val sync = SteamCloudSync(account, token)
         try {
-            if (!sync.connect()) return "Signed in, but couldn't reach Steam Cloud. Tap PLAY to retry."
+            when (sync.connect()) {
+                SteamCloudSync.ConnectResult.NETWORK_FAILED ->
+                    return "Signed in. (Offline — your cloud save will sync once you're back online.)"
+                SteamCloudSync.ConnectResult.AUTH_FAILED ->
+                    return "Signed in, but Steam rejected the session. Try signing in again."
+                SteamCloudSync.ConnectResult.OK -> { /* continue below */ }
+            }
             runCatching {
                 sync.fetchProfile()?.let { p ->
                     prefs.edit().putString("persona", p.personaName)
@@ -444,14 +551,13 @@ class SteamLoginActivity : AppCompatActivity() {
                     if (downloadAvatar(p.avatarHashHex)) runOnUiThread { loadAvatar(); refreshAccountLine() }
                 }
             }
-            val files = sync.listFiles()
-            Log.i("CrossCode", "[Steam] cloud files: $files")
-            val saveName = files.firstOrNull { it == "cc.save" }
-                ?: files.firstOrNull { it.endsWith("cc.save") && !it.contains("PERCENT") }
+            val cloud = sync.findSave()
                 ?: return "Signed in. No cloud save found yet — you're ready to play."
             val dest = File(getExternalFilesDir(null), "cloudsave/cc.save")
-            return if (sync.pull(saveName, dest)) "Cloud save downloaded. Ready to play!"
-                   else "Signed in, but the save download failed. Tap PLAY to retry."
+            return if (sync.pull(cloud.name, dest)) {
+                lastSyncedSha = SteamCloudSync.sha1Hex(dest)
+                "Cloud save downloaded. Ready to play!"
+            } else "Signed in, but the save download failed. Tap PLAY to retry."
         } finally {
             sync.disconnect()
         }
