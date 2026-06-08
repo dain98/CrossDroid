@@ -1,37 +1,50 @@
-# Installing and updating the game files
+# Game files
 
-## 1. The game files are going to be placed in your phones storage.  
+**You don't need to do any of this anymore.** On first launch, CrossDroid downloads CrossCode
+straight from Steam (the copy you own on your account) and sets up the mod loader for you — just
+sign in and tap **PLAY**. The one-time download is ~1.5 GB; after that, **PLAY** only syncs your
+cloud save and launches.
 
-In order to execute them later, this app needs your permission to access this storage.  
-Make sure now that the app has the "Storage" permission enabled.  
+This guide is kept as an **optional fallback** for anyone who'd rather copy the files over by hand —
+for example to skip the download on a metered connection, or if you already have CrossCode set up on
+the device. CrossDroid detects an existing `CrossCode` folder that already has a mod loader and
+**skips the download automatically**.
 
-## 2. Now you have to find the game files.  
+---
 
-The location of them can vary depending on how you installed CrossCode.  
-If you used Steam, the location should be  
-`C:\Program Files (x86)\Steam\steamapps\common\CrossCode` on Windows, or  
-`~/.steam/steam/steamapps/common/CrossCode` on Linux.  
-If you used a different method ([GOG](https://www.gog.com/), itch.io, etc.), search on the internet where games for that are usually saved.
+## Manual install (optional)
 
-## 3. Install CCLoader  
+### 1. Grant the storage permission
+
+The game files live in your phone's storage, and the app needs permission to read them. Make sure
+CrossDroid has the **Storage** permission enabled.
+
+### 2. Find the game files
+
+The location depends on how you installed CrossCode. If you used Steam, it's usually
+`C:\Program Files (x86)\Steam\steamapps\common\CrossCode` on Windows, or
+`~/.steam/steam/steamapps/common/CrossCode` on Linux. If you used a different store
+([GOG](https://www.gog.com/), itch.io, etc.), search online for where those games are stored.
+
+### 3. Install CCLoader
 
 Follow the steps at https://wiki.c2dl.info/CCLoader#Installation
 
 **Use CCLoader3 v3.3.1-alpha.** Newer versions (v3.3.2+) rely on a service worker / Node `require`
 that doesn't work in the Android WebView and will leave you on a black screen.
 
-## 4. Install the [cc-font-fix](https://github.com/krypciak/cc-font-fix) mod.  
+### 4. Install the [cc-font-fix](https://github.com/krypciak/cc-font-fix) mod
 
-Follow the guide on how to install mods [here](https://wiki.c2dl.info/Installing_mods).  
-You can download it directly from [here](https://github.com/krypciak/cc-font-fix/releases/tag/v1.0.0).  
+Follow the guide on [installing mods](https://wiki.c2dl.info/Installing_mods). You can download
+cc-font-fix directly from [its v1.0.0 release](https://github.com/krypciak/cc-font-fix/releases/tag/v1.0.0).
 
-## 5. OPTIONAL: Install your favorite mods
+### 5. Optional: install your favorite mods
 
 Be aware that some mods may not work on Android.
 
-## 6. Copy the directory to your phone
+### 6. Copy the directory to your phone
 
-Grab the folder called `CrossCode` and copy it to  
+Grab the folder called `CrossCode` and copy it to
 `Android/data/de.radicalfishgames.crosscode/files`
 
 **Verify that your files look like this:**
@@ -44,5 +57,4 @@ Grab the folder called `CrossCode` and copy it to
           - `ccloader`
           - `...`
 
-### That's it. You are done!
-
+### That's it. You're done!

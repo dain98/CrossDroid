@@ -9,6 +9,8 @@ controller, and sync your progress back to **Steam Cloud** when you quit. Built 
 
 ## What it does
 
+- **Downloads CrossCode for you** — on first launch, CrossDroid pulls the full game straight from
+  Steam (the copy you own) and sets up the mod loader automatically. No manual file copying.
 - **Sign in with Steam** — username/password *or* QR code (scan with the Steam Mobile app).
 - **Steam Cloud saves** — **PLAY** pulls your latest cloud save before launch; quitting uploads your
   progress back, so you can hop between PC and handheld.
@@ -21,15 +23,16 @@ controller, and sync your progress back to **Steam Cloud** when you quit. Built 
 
 - An Android device (developed/tested on an AYN Thor, Android 13).
 - A Steam account that **owns CrossCode**.
-- Your own CrossCode game files + CCLoader + the cc-font-fix mod, copied to the device —
-  see **[SETUP.md](SETUP.md)**.
+- ~1.5 GB of free space and a network connection for the one-time first-run download.
+  (Prefer to copy the files over yourself? That still works — see **[SETUP.md](SETUP.md)**.)
 
 ## Install
 
 1. Download the APK from the [Releases page](../../releases/latest) and sideload it
    (allow "install from unknown sources").
-2. Copy your game files to the device per **[SETUP.md](SETUP.md)**.
-3. Open CrossDroid, sign in with Steam, then tap **PLAY**.
+2. Open CrossDroid, sign in with Steam, then tap **PLAY**.
+3. On the first run it downloads CrossCode (~1.5 GB) and sets up the mod loader, then launches.
+   After that, **PLAY** just syncs your cloud save and starts the game.
 
 > The APK is signed with a local debug key — fine for sideloading, but you can't install it over a
 > differently-signed build without uninstalling first (uninstalling wipes the on-device game files;
@@ -50,15 +53,15 @@ CrossDroid stands on the shoulders of these projects:
   runtime/launcher this is forked from. CrossAndroid does not declare a license; this fork is shared
   as a **non-commercial fan project** with full credit. If the original author objects, please open
   an issue and it will be addressed.
-- **[CCLoader](https://github.com/CCDirectLink/CCLoader3)** — the CrossCode mod loader. CrossDroid is
-  verified against **CCLoader3 v3.3.1-alpha** (newer versions use a service worker / Node `require`
-  that breaks in the Android WebView).
-- **[cc-font-fix](https://github.com/krypciak/cc-font-fix)** by krypciak.
+- **[CCLoader](https://github.com/CCDirectLink/CCLoader3)** — the CrossCode mod loader, **bundled**
+  with CrossDroid and installed automatically. Verified against **CCLoader3 v3.3.1-alpha** (newer
+  versions use a service worker / Node `require` that breaks in the Android WebView).
+- **[cc-font-fix](https://github.com/krypciak/cc-font-fix)** by krypciak — also bundled.
 - **[JavaSteam](https://github.com/Longi94/JavaSteam)** — the Steam client library powering login and
   cloud sync.
 - **CrossCode** © [Radical Fish Games](https://www.radicalfishgames.com/) — go buy it, it's great.
-  CrossDroid bundles a little CrossCode UI art (the logo and a title background) on its launcher
-  screen; all game assets remain © Radical Fish Games.
+  CrossDroid uses a little CrossCode art on its launcher (the logo, a title background, and box art
+  for the app icon); all game assets remain © Radical Fish Games.
 - Original CrossAndroid pixelart by Ichiki Hayaite (TheSparkstarScope).
 
 ## Disclaimer
