@@ -10,6 +10,10 @@ class GameWebViewClient(private val gameWrapper: GameWrapper) : WebViewClient() 
 
     private val gameDir = File(gameWrapper.gameDir).canonicalFile
 
+    override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
+        gameWrapper.onPageStarted()
+    }
+
     override fun onPageFinished(view: WebView?, url: String?) {
         gameWrapper.onPageLoaded()
     }

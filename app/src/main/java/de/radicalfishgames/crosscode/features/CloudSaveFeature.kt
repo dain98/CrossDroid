@@ -28,18 +28,28 @@ class CloudSaveFeature(
 
     // PULL: seed localStorage from the file before the game reads it. Cloud-wins-on-launch,
     // mirroring Steam Cloud's model; timestamp-aware conflict resolution lands with the Steam layer.
-    override fun onPostGamePageLoad() {
+    //
+    // Seed at page-START (before CCLoader/the engine boot) so the save is present the first time the
+    // engine reads it. Seeding only at onPostGamePageLoad lands too late on a cold first launch
+    // (empty localStorage) — the title screen reads "no saves" before the inject, and it only
+    // appeared to work on later launches because localStorage persisted the late-injected value.
+    // The post-load call is kept as a harmless backup (idempotent re-seed of the same content).
+    override fun onGamePageStarted() = seedSave("page-start")
+
+    override fun onPostGamePageLoad() = seedSave("post-load")
+
+    private fun seedSave(phase: String) {
         try {
             if (!saveFile.exists() || saveFile.length() == 0L) {
-                Log.i(TAG, "[CloudSave] no save file at ${saveFile.absolutePath}, leaving localStorage as-is")
+                Log.i(TAG, "[CloudSave] ($phase) no save file at ${saveFile.absolutePath}, leaving localStorage as-is")
                 return
             }
             val content = saveFile.readText()
             // JSONObject.quote -> a safe, fully-escaped JS string literal
             runJS("localStorage.setItem('$KEY', ${JSONObject.quote(content)}); void 0;")
-            Log.i(TAG, "[CloudSave] injected ${content.length} chars into localStorage['$KEY']")
+            Log.i(TAG, "[CloudSave] ($phase) injected ${content.length} chars into localStorage['$KEY']")
         } catch (e: Exception) {
-            Log.e(TAG, "[CloudSave] inject failed", e)
+            Log.e(TAG, "[CloudSave] ($phase) inject failed", e)
         }
     }
 

@@ -93,6 +93,14 @@ class GameWrapper(private val webView: WebView, val modLoaderPresent: Boolean, v
     }
 
 
+    // Fired when the main document starts loading, before CCLoader/the engine run. Lets features
+    // seed state (e.g. the save) into the page before the engine reads it on a cold first boot.
+    fun onPageStarted(){
+        for(feature in features){
+            feature.onGamePageStarted()
+        }
+    }
+
     fun onPageLoaded(){
 
         Log.d("CrossCode", "Game page loaded.")
