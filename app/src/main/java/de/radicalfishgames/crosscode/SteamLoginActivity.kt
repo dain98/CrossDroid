@@ -321,6 +321,7 @@ class SteamLoginActivity : AppCompatActivity() {
         if (playOffline) {
             // Deliberate offline: skip the cloud round-trip and launch the local save now.
             // lastSyncedSha reconciles everything the next time you PLAY with the toggle off.
+            prefs.edit().putBoolean("sessionOffline", true).apply()   // exit won't try the cloud either
             setStatus("Playing offline — your progress syncs next time you play online.")
             launchGame()
             return
@@ -338,6 +339,7 @@ class SteamLoginActivity : AppCompatActivity() {
             try {
                 when (sync.connect()) {
                     SteamCloudSync.ConnectResult.NETWORK_FAILED -> {
+                        prefs.edit().putBoolean("sessionOffline", true).apply()   // exit skips the cloud attempt
                         if (localSha != null) { msg = "Offline — playing your local save."; launch = true }
                         else msg = "Can't reach Steam and there's no save on this device yet. Connect to the internet and try again."
                     }
@@ -345,6 +347,7 @@ class SteamLoginActivity : AppCompatActivity() {
                         expired = true; msg = "Your Steam login expired. Please sign in again."
                     }
                     SteamCloudSync.ConnectResult.OK -> {
+                        prefs.edit().putBoolean("sessionOffline", false).apply()  // online this session
                         val cloud = sync.findSave()
                         when {
                             cloud == null -> {

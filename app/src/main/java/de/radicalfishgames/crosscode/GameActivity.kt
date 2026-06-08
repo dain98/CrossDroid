@@ -123,10 +123,14 @@ class GameActivity : AppCompatActivity() {
                 Log.e("CrossCode", "[Steam] quit: extracting save failed", e)
             }
 
-            val offlineMode = prefs.getBoolean("playOffline", false)
-            if (offlineMode || account == null || token == null || !saveFile.exists() || saveFile.length() == 0L) {
-                // Offline mode, not signed in, or nothing to push: keep the save local. The next
+            val offlineSession = prefs.getBoolean("sessionOffline", false)
+            if (offlineSession || account == null || token == null || !saveFile.exists() || saveFile.length() == 0L) {
+                // Offline this session (manual toggle, or couldn't reach Steam at launch), not signed
+                // in, or nothing to push: keep the save local and DON'T attempt the cloud. The next
                 // online PLAY reconciles it via lastSyncedSha (local-changed -> pushed up).
+                if (offlineSession && saveFile.exists() && saveFile.length() > 0L) {
+                    Toast.makeText(this, "Saved locally — will sync to Steam Cloud next time you're online.", Toast.LENGTH_SHORT).show()
+                }
                 returnToLauncher()
                 return@ValueCallback
             }
