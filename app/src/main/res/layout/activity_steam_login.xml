@@ -15,6 +15,12 @@
         android:src="@drawable/bg_crosscode"
         android:contentDescription="@null" />
 
+    <!-- Dark scrim over the art so the gray/cyan text stays legible against bright areas. -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#A6060A10" />
+
     <!-- Landscape layout: branding | controls on top (filling the free space), with the transient
          status spinner + download bar pinned to a bottom strip so they're ALWAYS on screen (they
          used to fall below the fold once the offline toggle was added on a 16:9 display). -->
