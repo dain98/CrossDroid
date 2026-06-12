@@ -1,5 +1,7 @@
 # CrossDroid
 
+[![Ko-fi](https://img.shields.io/badge/Support-Ko--fi-ff5e5b?logo=ko-fi&logoColor=white)](https://ko-fi.com/imd_js)
+[![X](https://img.shields.io/badge/X-000000?logo=x&logoColor=white)](https://x.com/imd_js)  
 Play **CrossCode** on Android — sign in with Steam, pull your save from the cloud, play with a
 controller, and sync your progress back to **Steam Cloud** when you quit. Built for handhelds
 (developed on an AYN Thor) and phones.
